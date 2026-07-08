@@ -8,7 +8,6 @@ function Draggable(handle, target = handle) {
     isDragging = false;
 
   handle.addEventListener("mousedown", (e) => {
-    console.log("mousedown on", handle);
     isDragging = true;
     const rect = target.getBoundingClientRect();
     offsetX = e.clientX - rect.left;
@@ -21,11 +20,9 @@ function Draggable(handle, target = handle) {
     if (!isDragging) return;
     target.style.left = `${e.clientX - offsetX}px`;
     target.style.top = `${e.clientY - offsetY}px`;
-    console.log("move to", target.style.left, target.style.top);
   });
 
   document.addEventListener("mouseup", () => {
-    console.log("mouseup");
     isDragging = false;
   });
 }
@@ -58,19 +55,17 @@ function createWindow({
     <div class="window-content">${content}</div>
   `;
 
-  //Drag window
   const titleBar = win.querySelector(".window-titlebar");
   Draggable(titleBar, win);
 
-  // Close button
   win
     .querySelector('[aria-label="Close"]')
     .addEventListener("click", () => win.remove());
 
-  // Minimize button
   win.querySelector('[aria-label="Minimize"]').addEventListener("click", () => {
     win.style.display = win.style.display === "none" ? "block" : "none";
   });
+
   win.querySelector('[aria-label="Maximize"]').addEventListener("click", () => {
     const isMaxed = win.classList.toggle("maximized");
     if (isMaxed) {
@@ -112,23 +107,20 @@ function openSettings() {
   const bg2 = "red_low_poly_background.jpg";
 
   const settingsContent = `
-  <div style="padding: 10px;">
-    <p style="margin-bottom: 15px; font-weight: bold;">Select a background:</p>
-
-    <label style="display: block; margin-bottom: 10px;">
-      <input type="radio" name="background" value="${bg1}" 
-      <span>Wavy (Default)</span>
-    </label>
-
-    <label style="display: block; margin-bottom: 15px;">
-      <input type="radio" name="background" value="${bg2}" 
-      <span>Poly</span>
-    </label>
-
-    <button id="apply-bg-btn" style="padding: 8px 16px; background: #4a90e2; color: white; border: none; cursor: pointer;">
-      Apply Background
-    </button>
-  </div>
+    <div style="padding: 10px;">
+      <p style="margin-bottom: 15px; font-weight: bold;">Select a background:</p>
+      <label style="display: block; margin-bottom: 10px;">
+        <input type="radio" name="background" value="${bg1}" />
+        <span>Wavy (Default)</span>
+      </label>
+      <label style="display: block; margin-bottom: 15px;">
+        <input type="radio" name="background" value="${bg2}" />
+        <span>Poly</span>
+      </label>
+      <button id="apply-bg-btn" style="padding: 8px 16px; background: #4a90e2; color: white; border: none; cursor: pointer;">
+        Apply Background
+      </button>
+    </div>
   `;
 
   const settingsWin = createWindow({
@@ -143,9 +135,10 @@ function openSettings() {
   settingsWin.querySelector("#apply-bg-btn").addEventListener("click", () => {
     const selected = settingsWin.querySelector(
       'input[name="background"]:checked',
-    ).value;
+    );
+    if (!selected) return;
     document.getElementById("desktop").style.backgroundImage =
-      `url('${selected}')`;
+      `url('${selected.value}')`;
   });
 }
 
@@ -171,7 +164,7 @@ function openNotes() {
   });
 }
 
-// Apps
+// App Launcher
 function createAppLauncher() {
   const appLauncher = document.createElement("div");
   appLauncher.id = "app-launcher";
@@ -190,7 +183,7 @@ function createAppLauncher() {
   document.getElementById("desktop").appendChild(appLauncher);
 }
 
-// Todobar
+// Todo Bar
 function TodoBar() {
   const todoBar = document.createElement("div");
   todoBar.id = "todo-bar";
@@ -198,11 +191,31 @@ function TodoBar() {
     <div id="todo-header">📋 To-Do</div>
     <div id="todo-input-container">
       <input type="text" id="todo-input" placeholder="Add a new task..." />
-      <button id="add-todo-bin">➕</button>
+      <button id="add-todo-btn">➕</button>
     </div>
     <ul id="todo-list"></ul>
   `;
   document.getElementById("desktop").appendChild(todoBar);
+
+  document.getElementById("add-todo-btn").addEventListener("click", () => {
+    const input = document.getElementById("todo-input");
+    const text = input.value.trim();
+    if (!text) return;
+
+    const li = document.createElement("li");
+    li.className = "todo-item";
+    li.innerHTML = `<span>${text}</span><button class="todo-delete">✕</button>`;
+    li.querySelector(".todo-delete").addEventListener("click", () =>
+      li.remove(),
+    );
+    document.getElementById("todo-list").appendChild(li);
+    input.value = "";
+  });
+
+  // also allow pressing Enter to add a task
+  document.getElementById("todo-input").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") document.getElementById("add-todo-btn").click();
+  });
 }
 
 // Boot
@@ -214,13 +227,14 @@ function boot() {
 
   startClock();
   createAppLauncher();
+  TodoBar();
   openNotes();
-  //Starter window
+
   createWindow({
     title: "Welcome!",
     content: `<p>Welcome to 🍅 KetchupOS!</p>`,
   });
-  // Ketchup AD
+
   createWindow({
     title: "Ketchup Ad",
     content: `<div style="background-image: url('images.jpg'); background-size: cover; width: 100%; height: 200px;"></div>`,
@@ -228,13 +242,9 @@ function boot() {
     y: 200,
   });
 }
-//DOM
+
 if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", () => {
-    boot();
-    TodoBar();
-  });
+  document.addEventListener("DOMContentLoaded", boot);
 } else {
   boot();
-  TodoBar();
 }
