@@ -204,7 +204,7 @@ function TodoBar() {
 
     const li = document.createElement("li");
     li.className = "todo-item";
-    li.innerHTML = `<span>${text}</span><button class="todo-delete">✕</button>`;
+    li.innerHTML = `<span>${text}</span><button class="todo-delete"></button>`;
     li.querySelector(".todo-delete").addEventListener("click", () =>
       li.remove(),
     );
