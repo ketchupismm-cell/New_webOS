@@ -202,7 +202,9 @@ function TodoBar() {
     </div>
     <ul id="todo-list"></ul>
   `;
+  document.getElementById("desktop").appendChild(todoBar);
 }
+
 // Boot
 function boot() {
   const taskbar = document.createElement("div");
@@ -228,7 +230,11 @@ function boot() {
 }
 //DOM
 if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", boot);
+  document.addEventListener("DOMContentLoaded", () => {
+    boot();
+    TodoBar();
+  });
 } else {
   boot();
+  TodoBar();
 }
