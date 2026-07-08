@@ -132,7 +132,7 @@ function openSettings() {
   `;
 
   const settingsWin = createWindow({
-    title: "🍅 Settings",
+    title: "⚙️ Settings",
     content: settingsContent,
     x: 20,
     y: 20,
@@ -176,8 +176,8 @@ function createAppLauncher() {
   const appLauncher = document.createElement("div");
   appLauncher.id = "app-launcher";
   appLauncher.innerHTML = `
-    <button id="open-notes-btn">Notes</button>
-    <button id="open-settings-btn">Settings</button>
+    <button id="open-notes-btn">Notes📝</button>
+    <button id="open-settings-btn">Settings⚙️</button>
   `;
 
   appLauncher
@@ -190,11 +190,24 @@ function createAppLauncher() {
   document.getElementById("desktop").appendChild(appLauncher);
 }
 
+// Todobar
+function TodoBar() {
+  const todoBar = document.createElement("div");
+  todoBar.id = "todo-bar";
+  todoBar.innerHTML = `
+    <div id="todo-header">📋 To-Do</div>
+    <div id="todo-input-container">
+      <input type="text" id="todo-input" placeholder="Add a new task..." />
+      <button id="add-todo-bin">➕</button>
+    </div>
+    <ul id="todo-list"></ul>
+  `;
+}
 // Boot
 function boot() {
   const taskbar = document.createElement("div");
   taskbar.id = "taskbar";
-  taskbar.innerHTML = "<span>KetchupOS</span>";
+  taskbar.innerHTML = "<span>🍅 KetchupOS</span>";
   document.getElementById("desktop").appendChild(taskbar);
 
   startClock();
@@ -203,7 +216,7 @@ function boot() {
   //Starter window
   createWindow({
     title: "Welcome!",
-    content: `<p>Welcome to KetchupOS!</p>`,
+    content: `<p>Welcome to 🍅 KetchupOS!</p>`,
   });
   // Ketchup AD
   createWindow({
