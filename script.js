@@ -255,6 +255,41 @@ function createAppLauncher() {
   document.getElementById("desktop").appendChild(appLauncher);
 }
 
+// Todo Bar
+function TodoBar() {
+  const todoBar = document.createElement("div");
+  todoBar.id = "todo-bar";
+  todoBar.innerHTML = `
+    <div id="todo-header">📋 To-Do</div>
+    <div id="todo-input-container">
+      <input type="text" id="todo-input" placeholder="Add a new task..." />
+      <button id="add-todo-btn">➕</button>
+    </div>
+    <ul id="todo-list"></ul>
+  `;
+  document.getElementById("desktop").appendChild(todoBar);
+
+  document.getElementById("add-todo-btn").addEventListener("click", () => {
+    const input = document.getElementById("todo-input");
+    const text = input.value.trim();
+    if (!text) return;
+
+    const li = document.createElement("li");
+    li.className = "todo-item";
+    li.innerHTML = `<span>${text}</span><button class="todo-delete"></button>`;
+    li.querySelector(".todo-delete").addEventListener("click", () =>
+      li.remove(),
+    );
+    document.getElementById("todo-list").appendChild(li);
+    input.value = "";
+  });
+
+  // also allow pressing Enter to add a task
+  document.getElementById("todo-input").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") document.getElementById("add-todo-btn").click();
+  });
+}
+
 // Boot
 function boot() {
   const taskbar = document.createElement("div");
