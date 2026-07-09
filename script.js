@@ -35,6 +35,7 @@ function createWindow({
   y = 100,
   width = 300,
   height = 200,
+  onClose = null,
 }) {
   const win = document.createElement("div");
   win.className = "window";
@@ -58,9 +59,10 @@ function createWindow({
   const titleBar = win.querySelector(".window-titlebar");
   Draggable(titleBar, win);
 
-  win
-    .querySelector('[aria-label="Close"]')
-    .addEventListener("click", () => win.remove());
+  win.querySelector('[aria-label="Close"]').addEventListener("click", () => {
+    if (onClose) onClose();
+    win.remove();
+  });
 
   win.querySelector('[aria-label="Minimize"]').addEventListener("click", () => {
     win.style.display = win.style.display === "none" ? "block" : "none";
@@ -109,14 +111,17 @@ function openSettings() {
   const settingsContent = `
     <div style="padding: 10px;">
       <p style="margin-bottom: 15px; font-weight: bold;">Select a background:</p>
+
       <label style="display: block; margin-bottom: 10px;">
         <input type="radio" name="background" value="${bg1}" />
         <span>Wavy (Default)</span>
       </label>
+
       <label style="display: block; margin-bottom: 15px;">
         <input type="radio" name="background" value="${bg2}" />
         <span>Poly</span>
       </label>
+
       <button id="apply-bg-btn" style="padding: 8px 16px; background: #4a90e2; color: white; border: none; cursor: pointer;">
         Apply Background
       </button>
@@ -134,11 +139,10 @@ function openSettings() {
 
   settingsWin.querySelector("#apply-bg-btn").addEventListener("click", () => {
     const selected = settingsWin.querySelector(
-      'input[name="background"]:checked',
-    );
-    if (!selected) return;
+      'input[name="backround"]:checked',
+    ).value;
     document.getElementById("desktop").style.backgroundImage =
-      `url('${selected.value}')`;
+      `url(${selected})`;
   });
 }
 
@@ -155,12 +159,75 @@ function openNotes() {
     '<textarea id="notes-text" style="width:100%;height:100%;border:none;resize:none;" placeholder="Write your notes here..."></textarea>';
 
   notesWindow = createWindow({
-    title: "Notes",
+    title: "📝 Notes",
     content: notesContent,
     x: 420,
     y: 80,
     width: 320,
     height: 260,
+  });
+}
+//todo bar
+let todoWindow = null;
+
+function openTodo() {
+  if (todoWindow && document.body.contains(todoWindow)) {
+    todoWindow.style.zIndex = Date.now();
+    return;
+  }
+
+  const todoContent = `
+    <div style="display: flex; flex-direction: column; height: 100%; gap: 10px;">
+      <div style="display: flex; gap: 8px;">
+        <input type="text" id="todo-input" placeholder="Add a task..." style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+        <button id="add-todo-btn" style="padding: 8px 12px; background: #4a90e2; color: white; border: none; border-radius: 4px; cursor: pointer;">+</button>
+      </div>
+      <div id="todo-list" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;"></div>
+    </div>
+  `;
+
+  todoWindow = createWindow({
+    title: "📋 To-Do",
+    content: todoContent,
+    x: 650,
+    y: 80,
+    width: 300,
+    height: 350,
+  });
+
+  const input = todoWindow.querySelector("#todo-input");
+  const addBtn = todoWindow.querySelector("#add-todo-btn");
+  const todoList = todoWindow.querySelector("#todo-list");
+
+  addBtn.addEventListener("click", addTodo);
+  input.addEventListener("keypress", (e) => {
+    if (e.key === "Enter") addTodo();
+  });
+
+  function addTodo() {
+    const text = input.value.trim();
+    if (!text) return;
+
+    const todoItem = document.createElement("div");
+    todoItem.style.cssText =
+      "background: #f0f0f0; padding: 10px; border-radius: 4px; border-left: 3px solid #4a90e2; display: flex; justify-content: space-between; align-items: center;";
+    todoItem.innerHTML = `
+      <span>${text}</span>
+      <button style="background: transparent; border: none; color: #ff6b6b; cursor: pointer; font-size: 16px;">x</button>
+    `;
+
+    todoItem.querySelector("button").addEventListener("click", () => {
+      todoItem.remove();
+    });
+
+    todoList.insertBefore(todoItem, todoList.firstChild);
+    input.value = "";
+    input.focus();
+  }
+
+  addBtn.addEventListener("click", addTodo);
+  input.addEventListener("keypress", (e) => {
+    if (e.key === "Enter") addTodo();
   });
 }
 
@@ -169,8 +236,9 @@ function createAppLauncher() {
   const appLauncher = document.createElement("div");
   appLauncher.id = "app-launcher";
   appLauncher.innerHTML = `
-    <button id="open-notes-btn">Notes📝</button>
-    <button id="open-settings-btn">Settings⚙️</button>
+    <button class="app-btn" data-app"notes" title="Notes">Notes📝</button>
+    <button class="app-btn" data-app="todo" title="To-Do">📋</button>
+    <button class="app-btn" data-app="settings" title="settings">⚙️</button>
   `;
 
   appLauncher
@@ -180,42 +248,11 @@ function createAppLauncher() {
     .querySelector("#open-notes-btn")
     .addEventListener("click", openNotes);
 
+  appLauncher
+    .querySelector('[Data-app="todo"]')
+    .addEventListener("click", openTodo);
+
   document.getElementById("desktop").appendChild(appLauncher);
-}
-
-// Todo Bar
-function TodoBar() {
-  const todoBar = document.createElement("div");
-  todoBar.id = "todo-bar";
-  todoBar.innerHTML = `
-    <div id="todo-header">📋 To-Do</div>
-    <div id="todo-input-container">
-      <input type="text" id="todo-input" placeholder="Add a new task..." />
-      <button id="add-todo-btn">➕</button>
-    </div>
-    <ul id="todo-list"></ul>
-  `;
-  document.getElementById("desktop").appendChild(todoBar);
-
-  document.getElementById("add-todo-btn").addEventListener("click", () => {
-    const input = document.getElementById("todo-input");
-    const text = input.value.trim();
-    if (!text) return;
-
-    const li = document.createElement("li");
-    li.className = "todo-item";
-    li.innerHTML = `<span>${text}</span><button class="todo-delete">✕</button>`;
-    li.querySelector(".todo-delete").addEventListener("click", () =>
-      li.remove(),
-    );
-    document.getElementById("todo-list").appendChild(li);
-    input.value = "";
-  });
-
-  // also allow pressing Enter to add a task
-  document.getElementById("todo-input").addEventListener("keydown", (e) => {
-    if (e.key === "Enter") document.getElementById("add-todo-btn").click();
-  });
 }
 
 // Boot
@@ -227,12 +264,12 @@ function boot() {
 
   startClock();
   createAppLauncher();
-  TodoBar();
+  openTodo();
   openNotes();
 
   createWindow({
     title: "Welcome!",
-    content: `<p>Welcome to 🍅 KetchupOS!</p>`,
+    content: `<p>Welcome to 🍅 KetchupOS! Click the apps on the left to open apps. Have fun!</p>`,
   });
 
   createWindow({
